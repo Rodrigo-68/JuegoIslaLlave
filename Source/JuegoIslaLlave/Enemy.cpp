@@ -1,9 +1,9 @@
-#include "Enemy.h"
+ï»¿#include "Enemy.h"
 #include "PatrolStrategy.h"
 #include "IdleStrategy.h"
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
-#include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Pawn.h"
@@ -21,16 +21,27 @@ AEnemy::AEnemy()
 	CollisionComp->SetCollisionProfileName(TEXT("BlockAllDynamic"));
 	RootComponent = CollisionComp;
 
-	MeshComp = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("MeshComp"));
+	MeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("MeshComp"));
 	MeshComp->SetupAttachment(CollisionComp);
 	MeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 	// Asigna un mesh por defecto si no se ha asignado uno en el editor
-	static ConstructorHelpers::FObjectFinder<UStaticMesh> DefaultMesh(TEXT("StaticMesh'/Game/Geometry/Meshes/1M_Cube_Chamfer.1M_Cube_Chamfer'"));
+	
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> DefaultMesh(
+		TEXT("/Game/Geometry/Meshes/Enemigos/monster_0717120054.monster_0717120054"));
+
 	if (DefaultMesh.Succeeded())
 	{
-		MeshComp->SetStaticMesh(DefaultMesh.Object);
+		MeshComp->SetSkeletalMesh(DefaultMesh.Object);
+	MeshComp->SetRelativeScale3D(FVector(10.0f, 10.0f, 10.0f));     // ajusta el tamaÃ±o al probar
+	MeshComp->SetRelativeLocation(FVector(0.f, 0.f, -45.f));  // ajusta si flota o se hunde
+	// MeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f)); // descomenta si mira de lado
 	}
-
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> EnemyMat(
+		TEXT("/Game/Geometry/Meshes/Enemigos/Material_0.Material_0"));
+	if (EnemyMat.Succeeded())
+	{
+		MeshComp->SetMaterial(0, EnemyMat.Object);
+	}
 	DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
 	DetectionSphere->SetupAttachment(CollisionComp);
 	DetectionSphere->SetSphereRadius(DetectionRadius);
@@ -71,10 +82,15 @@ void AEnemy::Tick(float DeltaTime)
 		DuplicateCooldownTimer -= DeltaTime;
 	}
 
+	if (MineCooldownTimer > 0.f)
+	{
+		MineCooldownTimer -= DeltaTime;
+	}
+
 	DetectionSphere->SetSphereRadius(DetectionRadius);
 	CheckPlayerProximity();
 
-	// Si est¨¢ patrullando y pasa 10 s sin detectar al jugador, cambia a Idle
+	// Si estÃ¡ patrullando y pasa 10 s sin detectar al jugador, cambia a Idle
 	if (!bIsInIdle)
 	{
 		if (bPlayerInRange)
@@ -129,7 +145,7 @@ void AEnemy::SwitchToIdle()
 		SetStrategy(IdleStrategyObj);
 	}
 	//color
-	EnemyMaterial->SetVectorParameterValue(TEXT("Color"), FLinearColor::Green);
+	SetEnemyColor(FLinearColor::Green);
 	UE_LOG(LogTemp, Warning, TEXT("ENEMIGO: IDLE"));
 }
 
@@ -137,7 +153,7 @@ void AEnemy::SetEnemyColor(const FLinearColor& NewColor)
 {
 	if (EnemyMaterial)
 	{
-		// Ajusta "Color" si tu material usa otro nombre de par¨¢metro vectorial
+		// Ajusta "Color" si tu material usa otro nombre de parÃ¡metro vectorial
 		EnemyMaterial->SetVectorParameterValue(TEXT("Color"), NewColor);
 	}
 }
@@ -206,11 +222,19 @@ void AEnemy::TryDuplicateFromIdle()
 
 
 
-
 void AEnemy::DropMine()
 {
 	UWorld* World = GetWorld();
 	if (!World)
+	{
+		return;
+	}
+
+	// Quita referencias a minas que ya no existen
+	OwnedMines.RemoveAll([](Amina* M) { return !IsValid(M); });
+
+	// Respeta el lÃ­mite y la espera de 3 s
+	if (MineCooldownTimer > 0.f || OwnedMines.Num() >= MaxMines)
 	{
 		return;
 	}
@@ -229,12 +253,13 @@ void AEnemy::DropMine()
 	if (NewMine)
 	{
 		OwnedMines.Add(NewMine);
+		MineCooldownTimer = MineCooldown;
 	}
 }
 
 void AEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 {
-	// 1. Destruye ¨²nicamente las minas creadas por este enemigo
+	// 1. Destruye Ãºnicamente las minas creadas por este enemigo
 	for (Amina* Mine : OwnedMines)
 	{
 		if (IsValid(Mine))

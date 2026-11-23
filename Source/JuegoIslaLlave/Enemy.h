@@ -8,7 +8,7 @@
 
 class UBoxComponent;
 class USphereComponent;
-class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class UMaterialInstanceDynamic;
 class UPatrolStrategy;
 class UIdleStrategy;
@@ -61,7 +61,7 @@ private:
 	UBoxComponent* CollisionComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	UStaticMeshComponent* MeshComp;
+	USkeletalMeshComponent* MeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USphereComponent* DetectionSphere;
@@ -97,4 +97,13 @@ private:
 	float DuplicateCooldownTimer = 0.f;
 	bool bPlayerInRange = false;
 	bool bIsInIdle = false;
+
+	//p
+	UPROPERTY(EditAnywhere, Category = "Mines")
+	int32 MaxMines = 5;
+
+	UPROPERTY(EditAnywhere, Category = "Mines")
+	float MineCooldown = 3.f;
+
+	float MineCooldownTimer = 0.f;
 };
