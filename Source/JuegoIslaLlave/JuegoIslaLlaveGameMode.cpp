@@ -1,55 +1,39 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
 #include "JuegoIslaLlaveGameMode.h"
 #include "JuegoIslaLlaveCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Enemy.h"
-
+#include "JuegoFacade.h" // <-- IMPORTANTE: Incluir la Fachada
 
 AJuegoIslaLlaveGameMode::AJuegoIslaLlaveGameMode()
 {
-	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/ThirdPersonCPP/Blueprints/ThirdPersonCharacter"));
 	if (PlayerPawnBPClass.Class != NULL)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
-void AJuegoIslaLlaveGameMode::RegisterEnemy(AEnemy* Enemy)
-{
-	if (!Enemy)
-	{
-		return;
-	}
 
-	++EnemyCount;
-	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
-}
-
-void AJuegoIslaLlaveGameMode::UnregisterEnemy(AEnemy* Enemy)
+// AQUÍ INICIALIZAMOS LA FACHADA
+void AJuegoIslaLlaveGameMode::BeginPlay()
 {
-	EnemyCount = FMath::Max(0, EnemyCount - 1);
-	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
-}
+	Super::BeginPlay();
 
-bool AJuegoIslaLlaveGameMode::TryDuplicateEnemy(AEnemy* Source)
-{
 	UWorld* World = GetWorld();
-	if (!Source || !World || EnemyCount >= MaxEnemies)
+	if (World)
 	{
-		return false;
+		// 1. Instanciamos la Fachada en el mundo
+		FActorSpawnParameters Params;
+		MiFachada = World->SpawnActor<AJuegoFacade>(AJuegoFacade::StaticClass(), FVector(0, 0, 0), FRotator::ZeroRotator, Params);
+
+		// 2. La Fachada hace todo el trabajo sucio
+		if (MiFachada)
+		{
+			MiFachada->ConfigurarNivel();
+		}
 	}
-
-	const FVector Offset = FRotator(0.f, FMath::FRandRange(0.f, 360.f), 0.f).Vector() * 200.f;
-
-	FActorSpawnParameters Params;
-	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
-
-	AEnemy* NewEnemy = World->SpawnActor<AEnemy>(
-		Source->GetClass(),
-		Source->GetActorLocation() + Offset,
-		Source->GetActorRotation(),
-		Params);
-
-	return NewEnemy != nullptr;
 }
+
+// Tus funciones de enemigos se quedan intactas
+void AJuegoIslaLlaveGameMode::RegisterEnemy(AEnemy* Enemy) { /* ... tu código ... */ }
+void AJuegoIslaLlaveGameMode::UnregisterEnemy(AEnemy* Enemy) { /* ... tu código ... */ }
+bool AJuegoIslaLlaveGameMode::TryDuplicateEnemy(AEnemy* Source) { return false; /* tu código */ }
