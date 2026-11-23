@@ -49,6 +49,7 @@ void AClienteJefe::BeginPlay()
 	AJefe* Jefe = Director->ObtenerJefe();
 	if (Jefe != nullptr)
 	{
+		Jefe->SetActorRotation(GetActorRotation());
 		Jefe->MostrarDatos();
 	}
 }

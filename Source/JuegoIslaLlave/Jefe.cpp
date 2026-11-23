@@ -44,7 +44,7 @@ void AJefe::AdjuntarArma(AArmaJefe* Arma)
 	}
 
 	Arma->AttachToActor(this, FAttachmentTransformRules::KeepRelativeTransform);
-	Arma->SetActorRelativeLocation(FVector(40.f, 90.f, 100.f));
+	Arma->SetActorRelativeLocation(FVector(-150.f, 70.f, 120.f));
 	TieneArma = true;
 }
 
