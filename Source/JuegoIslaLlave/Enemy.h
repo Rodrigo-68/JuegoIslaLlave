@@ -4,7 +4,9 @@
 #include "GameFramework/Actor.h"
 #include "UObject/ScriptInterface.h"
 #include "EnemyInterface.h"
+#include "EnemyObserver.h"   
 #include "Enemy.generated.h"
+
 
 class UBoxComponent;
 class USphereComponent;
@@ -13,10 +15,10 @@ class UMaterialInstanceDynamic;
 class UPatrolStrategy;
 class UIdleStrategy;
 class Amina;
+class UEnemyObserver;
 
 UCLASS()
-class JUEGOISLALLAVE_API AEnemy : public AActor
-{
+class JUEGOISLALLAVE_API AEnemy : public AActor, public IEnemyObserver {
 	GENERATED_BODY()
 
 public:
@@ -106,4 +108,16 @@ private:
 	float MineCooldown = 3.f;
 
 	float MineCooldownTimer = 0.f;
+
+	//observer
+public:
+	void Attach(TScriptInterface<IEnemyObserver> Observer);
+	void Detach(TScriptInterface<IEnemyObserver> Observer);
+	void NotifyPlayerDetected();
+
+	// --- Observer ---
+	virtual void OnPlayerDetected(AEnemy* Source) override;
+private:
+	UPROPERTY()
+	TArray<TScriptInterface<IEnemyObserver>> Observers;
 };

@@ -15,22 +15,8 @@ AJuegoIslaLlaveGameMode::AJuegoIslaLlaveGameMode()
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
-void AJuegoIslaLlaveGameMode::RegisterEnemy(AEnemy* Enemy)
-{
-	if (!Enemy)
-	{
-		return;
-	}
 
-	++EnemyCount;
-	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
-}
 
-void AJuegoIslaLlaveGameMode::UnregisterEnemy(AEnemy* Enemy)
-{
-	EnemyCount = FMath::Max(0, EnemyCount - 1);
-	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
-}
 
 bool AJuegoIslaLlaveGameMode::TryDuplicateEnemy(AEnemy* Source)
 {
@@ -52,4 +38,41 @@ bool AJuegoIslaLlaveGameMode::TryDuplicateEnemy(AEnemy* Source)
 		Params);
 
 	return NewEnemy != nullptr;
+}
+
+void AJuegoIslaLlaveGameMode::RegisterEnemy(AEnemy* Enemy)
+{
+	if (!Enemy)
+	{
+		return;
+	}
+
+	// Conecta al nuevo con los que ya existen, en ambos sentidos
+	for (AEnemy* Other : Enemies)
+	{
+		if (IsValid(Other))
+		{
+			Other->Attach(Enemy);
+			Enemy->Attach(Other);
+		}
+	}
+	Enemies.Add(Enemy);
+
+	++EnemyCount;
+	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
+}
+
+void AJuegoIslaLlaveGameMode::UnregisterEnemy(AEnemy* Enemy)
+{
+	Enemies.Remove(Enemy);
+	for (AEnemy* Other : Enemies)
+	{
+		if (IsValid(Other))
+		{
+			Other->Detach(Enemy);
+		}
+	}
+
+	EnemyCount = FMath::Max(0, EnemyCount - 1);
+	UE_LOG(LogTemp, Warning, TEXT("Enemigos: %d"), EnemyCount);
 }

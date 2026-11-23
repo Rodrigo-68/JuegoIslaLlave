@@ -25,6 +25,10 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Enemies")
 	int32 MaxEnemies = 10;
+
+	//observer
+	UPROPERTY()
+	TArray<AEnemy*> Enemies;
 };
 
 

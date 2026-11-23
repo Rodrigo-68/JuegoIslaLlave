@@ -32,7 +32,7 @@ AEnemy::AEnemy()
 	if (DefaultMesh.Succeeded())
 	{
 		MeshComp->SetSkeletalMesh(DefaultMesh.Object);
-	MeshComp->SetRelativeScale3D(FVector(10.0f, 10.0f, 10.0f));     // ajusta el tamaño al probar
+	MeshComp->SetRelativeScale3D(FVector(5.0f, 5.0f, 5.0f));     // ajusta el tamaño al probar
 	MeshComp->SetRelativeLocation(FVector(0.f, 0.f, -45.f));  // ajusta si flota o se hunde
 	// MeshComp->SetRelativeRotation(FRotator(0.f, -90.f, 0.f)); // descomenta si mira de lado
 	}
@@ -165,10 +165,16 @@ bool AEnemy::IsPlayerDetected() const
 
 void AEnemy::UpdateDetectionState(bool bDetected)
 {
+	const bool bWasInRange = bPlayerInRange;
 	bPlayerInRange = bDetected;
+
 	if (bPlayerInRange)
 	{
 		TimeWithoutDetection = 0.f;
+		if (!bWasInRange)
+		{
+			NotifyPlayerDetected();
+		}
 	}
 }
 
@@ -279,4 +285,53 @@ void AEnemy::EndPlay(const EEndPlayReason::Type EndPlayReason)
 	}
 
 	Super::EndPlay(EndPlayReason);
+}
+
+void AEnemy::Attach(TScriptInterface<IEnemyObserver> Observer)
+{
+	if (Observer.GetObject())
+	{
+		Observers.Add(Observer);
+	}
+}
+
+void AEnemy::Detach(TScriptInterface<IEnemyObserver> Observer)
+{
+	Observers.RemoveAll([&](const TScriptInterface<IEnemyObserver>& O)
+		{
+			return O.GetObject() == Observer.GetObject();
+		});
+}
+
+void AEnemy::NotifyPlayerDetected()
+{
+	for (const TScriptInterface<IEnemyObserver>& Observer : Observers)
+	{
+		UObject* Obj = Observer.GetObject();
+		if (IsValid(Obj))
+		{
+			if (IEnemyObserver* O = Cast<IEnemyObserver>(Obj))
+			{
+				O->OnPlayerDetected(this);
+			}
+		}
+	}
+}
+
+void AEnemy::OnPlayerDetected(AEnemy* Source)
+{
+	if (Source == this)
+	{
+		return;
+	}
+
+	if (bIsInIdle)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("%s despierta por alerta de %s"), *GetName(), *Source->GetName());
+		SwitchToPatrol();
+	}
+	else
+	{
+		TimeWithoutDetection = 0.f; // los que ya patrullan siguen en alerta
+	}
 }
