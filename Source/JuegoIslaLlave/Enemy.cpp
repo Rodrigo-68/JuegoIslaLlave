@@ -4,6 +4,8 @@
 #include "Components/BoxComponent.h"
 #include "Components/SphereComponent.h"
 #include "Components/StaticMeshComponent.h"
+#include "Components/SkeletalMeshComponent.h"
+#include "Engine/SkeletalMesh.h"
 #include "Materials/MaterialInstanceDynamic.h"
 #include "Kismet/GameplayStatics.h"
 #include "GameFramework/Pawn.h"
@@ -31,6 +33,21 @@ AEnemy::AEnemy()
 		MeshComp->SetStaticMesh(DefaultMesh.Object);
 	}
 
+	// Malla del monstruo (reemplaza visualmente al cubo)
+	SkeletalMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("SkeletalMeshComp"));
+	SkeletalMeshComp->SetupAttachment(CollisionComp);
+	SkeletalMeshComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+
+	static ConstructorHelpers::FObjectFinder<USkeletalMesh> MonsterMesh(
+		TEXT("SkeletalMesh'/Game/mallas/Enemigos/monster_0717120054.monster_0717120054'"));
+	if (MonsterMesh.Succeeded())
+	{
+		SkeletalMeshComp->SetSkeletalMesh(MonsterMesh.Object);
+		SkeletalMeshComp->SetRelativeLocation(FVector(0.f, 0.f, -45.f));
+		SkeletalMeshComp->SetRelativeRotation(FRotator(0.f, 0.f, 0.f));
+		SkeletalMeshComp->SetRelativeScale3D(FVector(3.f, 3.f, 3.f));
+		MeshComp->SetVisibility(false);   // oculta el cubo, pero no se borra
+	}
 	DetectionSphere = CreateDefaultSubobject<USphereComponent>(TEXT("DetectionSphere"));
 	DetectionSphere->SetupAttachment(CollisionComp);
 	DetectionSphere->SetSphereRadius(DetectionRadius);

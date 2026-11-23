@@ -9,6 +9,7 @@
 class UBoxComponent;
 class USphereComponent;
 class UStaticMeshComponent;
+class USkeletalMeshComponent;
 class UMaterialInstanceDynamic;
 class UPatrolStrategy;
 class UIdleStrategy;
@@ -62,6 +63,9 @@ private:
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	UStaticMeshComponent* MeshComp;
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	USkeletalMeshComponent* SkeletalMeshComp;
 
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
 	USphereComponent* DetectionSphere;
