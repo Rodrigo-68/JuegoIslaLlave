@@ -16,12 +16,10 @@ void AConstructorJefe::ConstruirCuerpo(FVector Posicion)
 
 void AConstructorJefe::ConstruirArma()
 {
-	// Se redefine en los constructores concretos
 }
 
 void AConstructorJefe::ConstruirEscudo()
 {
-	// Se redefine en los constructores concretos
 }
 
 AJefe* AConstructorJefe::ObtenerJefe()
